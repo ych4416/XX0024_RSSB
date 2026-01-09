@@ -1,0 +1,12 @@
+{
+  "name": "xx0023_rssb",
+  "version": "1.0.0",
+  "description": "OISC RSSB IDE",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
