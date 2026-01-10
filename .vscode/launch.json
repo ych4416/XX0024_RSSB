@@ -17,7 +17,7 @@
       "url": "${workspaceFolder}/index.html"
     },
     {
-      "name": "localhost (Chrome)",
+      "name": "Launch Chrome",
       "type": "chrome",
       "request": "launch",
       "runtimeArgs": [

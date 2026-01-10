@@ -80,9 +80,9 @@
     <div id="main-tabs">
         <ul>
             <!-- li id="tab0" ><a href="#tabs-2dgraphics">2D-GRAPHIC</a></li -->
-            <li id="tab1"><a href="#tabs-main">MAIN</a></li>
-            <li id="tab2"><a href="#tabs-editor" onclick="_switchtab(2)">EDITOR</a></li>
-            <li id="tab3"><a href="#tabs-loadsave">LOAD/SAVE</a></li>
+            <li id="tab1"><a href="#tabs-main"     onclick="_switchtab(0)">MAIN</a></li>
+            <li id="tab2"><a href="#tabs-editor"   onclick="_switchtab(1)">EDITOR</a></li>
+            <li id="tab3"><a href="#tabs-loadsave" onclick="_switchtab(2)">LOAD/SAVE</a></li>
         </ul>
         <!-- div id="tabs-2dgraphics"><svg id="svg2dgraphic"></svg></div -->
         <div id="tabs-main"><h1>CONSOLE</h1><div id="terminal"></div></div>
@@ -464,7 +464,10 @@
             } else {
                 if ((isNaN(mem[op]) || isNaN(mem[acc])) && traceFunc !== null) await traceFunc(mem[pc]);
                 var val = mem[op] - mem[acc];
-                if (isNaN(val) && traceFunc !== null) await traceFunc(mem[pc]);
+                if (isNaN(val)) {
+                window.alert("incorrect Sub value: " + ("PC=" + pc + "mem[pc]=" + mem[pc]+" acc="+acc) + ".. abort");
+                return;
+            }
                 mem[acc] = val;
                 mem[op] = val;
             }
@@ -486,7 +489,7 @@
     async function RunProgram(line) {
         var text = editor.getValue();
         if (Assemble(text, function (s) { terminalUI.writeln(s) }))
-            await RSSB(mem, 5, function (addr) { return true; }, async function () { return await terminalUI.getChar(false) }, terminalUI.putChars);
+            await RSSB(mem, 5, function (addr) { return true; }, async function () { return await terminalUI.getChar(false) }, async function (s) { await terminalUI.putchars(s); });
         terminalUI.writeln("Rssb Halted..\r\nReady.");
     }
     async function DebugProgram() {
@@ -683,6 +686,7 @@
             $("#inBrowsing").append(new Option(fnames[key], fnames[key]));
         };
         $('#bootStrapName')[0].innerHTML = storage.bootStrap;
+        SwitchFile(storage.bootStrap);
     }
 
     function SwitchFile(newFileName) {
@@ -692,9 +696,9 @@
             if ($("#inBrowsing")[0].options[i].value === newFileName)
                 $('#inBrowsing')[0].options[i].selected = true;
         }
-        if (curFileName !== null && storage.files[curFileName] !== undefined) {
-            storage.files[curFileName] = editor.getValue();
-        }
+        //if (curFileName !== null && storage.files[curFileName] !== undefined) {
+        //    storage.files[curFileName] = editor.getValue();
+        //}
         editor.setValue(storage.files[newFileName]);
         editor.selection.clearSelection();
         curFileName = newFileName;
@@ -1034,8 +1038,19 @@
                     src = src + ((l.label !== undefined && l.label !== null) ? l.label + " " : "\t\t") + l.op;
                     if (l.oprs !== undefined) { for (var m = 0; m < l.oprs.length; m++) { src += " " + l.oprs[m] } };
                     if (l.comment !== undefined && l.comment !== null && l.comment.val !== undefined) src += "\t;" + l.comment.val;
-                    objs.push({ addr: addr, val: l.oprs[0], src: src });
-                    addr++;
+                    for(var mm=0; mm < l.oprs.length; mm++){
+                        var ss = null;
+                        try{ss = eval(l.oprs[mm])}catch(e){};
+                        if(typeof(ss) === "string"){
+                            for (var i2 = 0; i2 < ss.length; i2++) {
+                                objs.push({ addr: addr, val: (ss.charCodeAt(i2)), src: src + " " + i2 + " of " + ss.length });
+                                addr++;
+                            };
+                        } else {
+                            objs.push({ addr: addr, val: l.oprs[mm], src: src });
+                            addr++;
+                        }
+                    };
                     break;
                 case "DCS":
                     if (l.oprs.length <= 0) { errorFunc("DCS needs a operand"); return; };
@@ -1181,7 +1196,7 @@
    masmFile = ff:line* {return ff;}\n\
    line = exportLine / memsizeLine / dataLine / commentLine \n\
    exportLine = "EXPORT" dlims symbol dlims number eol\n\
-   memsizeLine = "MEMORY" dlims msize:number eol { mem.length = msize; };\n\
+   memsizeLine = "MEMORY" dlims msize:number eol { mem.length = msize; mem.fill(4); };\n\
    dataLine = dlim addr:number dlims data:number cmt:commentD? eol { mem[addr] = data; src[addr]=cmt; }\n\
    commentLine = dlim ";" $[^\\n]* eol \n\
    comment = dlim ";" ss:$[^\\n]* {return ss;}\n\
@@ -1204,11 +1219,26 @@
 </script>
 
 <script>
+    var nsave = 0;
     $(function () {
         $("#main-tabs").tabs({ active: 0 });
+        nsave = 0;
     });
     function _switchtab(n) {
         $("#main-tabs").tabs({ active: n });
-        if (n === 2) editor.resize(); // refresh editor;
+        if (n === 1) {
+            if(nsave === 2) {
+                //window.alert("AUTO LOADING...");
+                //storage = JSON.parse($("#outload").val());
+                ResetMenu();
+            }
+            editor.resize(); // refresh editor;
+        } else if (n === 2) {
+            if (nsave === 1) {
+                //window.alert("AUTO STRINGIFY...");
+                //$("#outload").val(JSON.stringify(storage));
+            }
+        }
+        nsave = n;
     }
 </script>
