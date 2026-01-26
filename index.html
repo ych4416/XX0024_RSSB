@@ -463,19 +463,19 @@
     //          RSSB - Reverse Subtract Skip if Borrow
     //
     async function RSSB(mem, start, traceFunc, getChar, putChars) {
-        const pc = 0;
+        const ip = 0;
         const acc = 1;
         const zero = 2;
 
-        mem[pc] = start;
+        mem[ip] = start;
         mem[zero] = 0;
 
-        while (!(mem[pc] == 2 && mem[acc] == 1)) {
-            if (pc < 0 || Number.isNaN(mem[pc])) {
-                window.alert("incorrect PC value: " + ("PC=" + pc + "mem[pc]=" + mem[pc]) + ".. abort");
+        while (!(mem[ip] == 2 && mem[acc] == 1)) {
+            if (ip < 0 || Number.isNaN(mem[ip])) {
+                window.alert("incorrect Assemble value: " + ("IP=" + ip + "mem[ip]=" + mem[ip]) + ".. abort");
                 return;
             }
-            var addr = mem[pc];
+            var addr = mem[ip];
             var op = mem[addr];
             switch (op) {
                 case 3:
@@ -486,20 +486,20 @@
             if (op == 4) {
                 mem[op] = mem[acc];
             } else {
-                if ((isNaN(mem[op]) || isNaN(mem[acc])) && traceFunc !== null) await traceFunc(mem[pc]);
+                if ((isNaN(mem[op]) || isNaN(mem[acc])) && traceFunc !== null) await traceFunc(mem[ip]);
                 var val = mem[op] - mem[acc];
                 if (isNaN(val)) {
-                window.alert("incorrect Sub value: " + ("PC=" + pc + "mem[pc]=" + mem[pc]+" acc="+acc) + ".. abort");
+                window.alert("incorrect Sub value: " + ("IP=" + ip + "mem[ip]=" + mem[ip]+" acc="+acc) + ".. abort");
                 return;
             }
                 mem[acc] = val;
                 mem[op] = val;
             }
-            mem[pc] += mem[acc] >= 0 ? 1 : 2;
+            mem[ip] += mem[acc] >= 0 ? 1 : 2;
             if (op == 2) mem[op] = 0;
             if (op == 4)
                 await putChars(String.fromCharCode([mem[op]]));
-            if (traceFunc !== null && ! await traceFunc(mem[pc])) return;
+            if (traceFunc !== null && ! await traceFunc(mem[ip])) return;
         } // while
         terminalUI.writeln("Processor: HALTED...")
     }
@@ -845,7 +845,7 @@
    symbol = sym:$([a-zA-Z][0-9a-zA-Z]*) {return sym;}\n\
    ';
     class SymTab {
-        tbl = { "PC": { val: 0, len: 1 }, "ACC": { val: 1, len: 1 }, "ZERO": { val: 2, len: 1 }, "CIN": { val: 3, len: 1 }, "COUT": { val: 4, len: 1 } };
+        tbl = { "IP": { val: 0, len: 1 }, "ACC": { val: 1, len: 1 }, "ZERO": { val: 2, len: 1 }, "CIN": { val: 3, len: 1 }, "COUT": { val: 4, len: 1 } };
         parent = null;
         constructor(parent) { this.parent = parent; }
         SetVal(key, val) { this.tbl[key] = { val: val, len: 1 }; }
